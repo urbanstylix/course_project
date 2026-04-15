@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import AdminDashboard from "./components/AdminDashboard";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("token")
+  );
 
   return (
     <div>
       {isLoggedIn ? (
-        <AdminDashboard />
+        <AdminDashboard onLogout={() => handleLogout(setIsLoggedIn)} />
       ) : (
         <Login onLogin={() => setIsLoggedIn(true)} />
       )}
@@ -15,25 +17,48 @@ function App() {
   );
 }
 
+// 🔐 Login Component
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
-    // 🚀 NEXT STEP: Replace this with backend API call
-    if (email === "admin@test.com" && password === "1234") {
-      onLogin();
-    } else {
-      alert("Invalid credentials");
+    try {
+      const response = await fetch(
+        "https://courseprojectbackend-production.up.railway.app/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        alert("Login successful");
+        onLogin();
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Server error");
     }
   };
 
   return (
     <div style={styles.container}>
       <h2>Login</h2>
-      <form onSubmit={handleLogin} style={styles.form}>
+      <form onSubmit={handleLoginSubmit} style={styles.form}>
         <input
           type="email"
           placeholder="Email"
@@ -56,6 +81,13 @@ function Login({ onLogin }) {
   );
 }
 
+// 🔓 Logout handler (separate function as you prefer)
+function handleLogout(setIsLoggedInFn) {
+  localStorage.removeItem("token");
+  setIsLoggedInFn(false);
+}
+
+// 🎨 Styles
 const styles = {
   container: {
     height: "100vh",
