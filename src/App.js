@@ -27,7 +27,7 @@ function Login({ onLogin }) {
 
     try {
       const response = await fetch(
-        "https://courseprojectbackend-production.up.railway.app/login",
+        "https://courseprojectbackend-production-320d.up.railway.app/login",
         {
           method: "POST",
           headers: {
